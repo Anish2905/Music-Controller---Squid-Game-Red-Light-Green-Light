@@ -36,6 +36,7 @@ This is a **Python-based music controller** using **Tkinter** for the GUI and **
 3. **Run the script**  
    ```sh
    python music_controller.py
+   #name of the script
    ```
 
 ## 🎶 Requirements  

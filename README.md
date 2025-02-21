@@ -11,8 +11,7 @@ This is a **Python-based music controller** using **Tkinter** for the GUI and **
 
 ✅ **Playback Controls**:  
    - **Pause**: Temporarily halts playback.  
-   - **Resume**: Continues playback from the paused state.  
-   - **Stop**: Stops all music immediately.  
+   - **Resume**: Continues playback from the paused state.   
 
 ✅ **Simple & Interactive GUI** built with Tkinter.  
 
@@ -45,7 +44,7 @@ This is a **Python-based music controller** using **Tkinter** for the GUI and **
 - `tkinter` (included in Python)  
 
 ## 📜 License  
-This project is open-source under the **MIT License**.  
+This project is open-source 
 
 ---
 

@@ -5,59 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    .toggle-switch {
-      position: fixed;
-      bottom: 1rem;
-      right: 1rem;
-      width: 100px;
-      height: 50px;
-      --light: #d8dbe0;
-      --dark: #28292c;
-      --link: rgb(27, 129, 112);
-      --link-hover: rgb(24, 94, 82);
-      z-index: 2;
-    }
-    .switch-label {
-      position: absolute;
-      width: 100%;
-      height: 50px;
-      background-color: var(--dark);
-      border-radius: 25px;
-      cursor: pointer;
-      border: 3px solid var(--dark);
-      display: block;
-    }
-    .checkbox {
-      position: absolute;
-      display: none;
-    }
-    .slider {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      border-radius: 25px;
-      transition: 0.3s;
-    }
-    .checkbox:checked ~ .slider {
-      background-color: var(--light);
-    }
-    .slider::before {
-      content: "";
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      width: 25px;
-      height: 25px;
-      border-radius: 50%;
-      box-shadow: inset 12px -4px 0px 0px var(--light);
-      background-color: var(--dark);
-      transition: 0.3s;
-    }
-    .checkbox:checked ~ .slider::before {
-      transform: translateX(50px);
-      background-color: var(--dark);
-      box-shadow: none;
-    }
+    /* Basic Styles */
     * {
       margin: 0;
       padding: 0;
@@ -72,23 +20,31 @@
       justify-content: center;
       align-items: center;
       position: relative;
-      overflow: hidden;
       transition: background 0.25s, color 0.25s;
     }
-    body.light-mode {
-      background: #f0f0f0;
-      color: #333;
-    }
-    body.light-mode .controller {
-      background: rgba(255,255,255,0.95);
-      box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
-    }
-    body.light-mode .title {
-      color: #FF6B6B;
-    }
-    body.light-mode .timer-display,
-    body.light-mode .status {
-      color: #4CAF50;
+    /* Mobile scrolling adjustments */
+    @media (max-width: 600px) {
+      body {
+        align-items: flex-start;
+        overflow-y: auto;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+      }
+      .controller {
+        margin: 1rem;
+        padding: 1.5rem;
+      }
+      .timer-display {
+        font-size: 2.5em;
+      }
+      .timer-input {
+        width: 100px;
+        font-size: 1em;
+      }
+      .shadow__btn {
+        font-size: 15px;
+        padding: 12px 20px;
+      }
     }
     #container {
       position: fixed;
@@ -194,6 +150,11 @@
       gap: 1rem;
       margin: 2rem 0;
     }
+    @media (max-width: 500px) {
+      .button-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
     .shadow__btn {
       padding: 15px 25px;
       border: none;
@@ -226,77 +187,11 @@
                   0 0 50px currentColor,
                   0 0 100px currentColor;
     }
-    .volume-control {
-      margin: 2rem 0;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    .volume-slider {
-      flex: 1;
-      height: 10px;
-      appearance: none;
-      -webkit-appearance: none;
-      background: #3D4455;
-      border-radius: 5px;
-    }
-    .volume-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 20px;
-      height: 20px;
-      background: #FF6B6B;
-      border-radius: 50%;
-      cursor: pointer;
-    }
     .status {
       text-align: center;
       margin-top: 1rem;
       font-size: 1.2em;
       color: #4CAF50;
-    }
-    /* Mobile-specific adjustments */
-    @media (max-width: 600px) {
-      .controller {
-        margin: 1rem;
-        padding: 1.5rem;
-      }
-      .timer-display {
-        font-size: 2.5em;
-      }
-      .timer-input {
-        width: 100px;
-        font-size: 1em;
-      }
-      .shadow__btn {
-        font-size: 15px;
-        padding: 12px 20px;
-      }
-    }
-    /* Adjust grid layout for smaller screens */
-    @media (max-width: 500px) {
-      .button-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-    /* Adjust toggle switch dimensions on very small screens */
-    @media (max-width: 400px) {
-      .toggle-switch {
-        width: 80px;
-        height: 40px;
-      }
-      .switch-label {
-        height: 40px;
-        border-radius: 20px;
-      }
-      .slider::before {
-        width: 20px;
-        height: 20px;
-        top: 10px;
-        left: 10px;
-      }
-      .checkbox:checked ~ .slider::before {
-        transform: translateX(40px);
-      }
     }
   </style>
 </head>
@@ -312,7 +207,7 @@
       <div class="timer-notification" id="timerNotification"></div>
     </div>
     <div class="button-grid">
-      <!-- Reordered buttons: Red Light, Green Light, Loop Music, Pause, Stop, and Logs -->
+      <!-- Button order: Red Light, Green Light, Loop Music, Pause, Stop, Logs -->
       <button class="shadow__btn btn-red" onclick="playTrack('B')">🔴 Red Light!</button>
       <button class="shadow__btn btn-green" onclick="playTrack('C')">🟢 Green Light</button>
       <button class="shadow__btn btn-loop" onclick="playTrack('A', -1)">🎶 Loop Music</button>
@@ -320,39 +215,29 @@
       <button class="shadow__btn btn-loop" onclick="stopMusic()">⏹️ Stop</button>
       <button class="shadow__btn btn-loop" onclick="viewLogs()">📜 View Logs</button>
     </div>
-    <div class="volume-control">
-      <span>🔊 Volume:</span>
-      <input type="range" class="volume-slider" min="0" max="100" value="70" onchange="setVolume(this.value)">
-      <span id="volumeDisplay">70%</span>
-    </div>
     <div class="status" id="status">No Track Playing</div>
   </div>
-  <div class="toggle-switch">
-    <label class="switch-label">
-      <input type="checkbox" class="checkbox">
-      <span class="slider"></span>
-    </label>
-  </div>
   <script>
-    // Audio tracks
+    // Define audio tracks and set volume to maximum
     const tracks = {
       'A': new Audio('t.mp3'),
       'B': new Audio('r.mp3'),
       'C': new Audio('g.mp3')
     };
-    let currentVolume = 0.7;
+    let currentVolume = 1; // maximum volume
     Object.values(tracks).forEach(audio => {
       audio.volume = currentVolume;
     });
+    
     let currentTrack = null;
     let currentTrackKey = null;
     let isPaused = false;
     let timerInterval = null;
     let trackStartTime = 0;
     let totalPlayed = { 'A': 0, 'B': 0, 'C': 0 };
-    // Array to store logs for viewing
+    // Log array for tracking play durations
     let logs = [];
-
+    
     function logDuration(trackKey) {
       if (trackKey && trackStartTime) {
         const duration = (Date.now() - trackStartTime) / 1000;
@@ -416,13 +301,6 @@
       const btn = document.getElementById('pauseButton');
       btn.textContent = isPaused ? "▶️ Resume" : "⏸️ Pause";
     }
-    function setVolume(value) {
-      currentVolume = value / 100;
-      document.getElementById('volumeDisplay').textContent = `${value}%`;
-      Object.values(tracks).forEach(audio => {
-        audio.volume = currentVolume;
-      });
-    }
     function updateStatus() {
       const status = document.getElementById('status');
       if (!currentTrackKey) {
@@ -467,6 +345,7 @@
       timerCancelFlag = true;
       updateTimerDisplay(0);
       document.getElementById('timerNotification').textContent = "";
+      stopMusic(); // Now stops the track when Cancel is pressed.
     }
     function updateTimerDisplay(seconds) {
       const minutes = Math.floor(seconds / 60);
@@ -481,13 +360,6 @@
         alert(logs.join("\n"));
       }
     }
-    document.querySelector('.checkbox').addEventListener('change', function() {
-      if (this.checked) {
-        document.body.classList.add('light-mode');
-      } else {
-        document.body.classList.remove('light-mode');
-      }
-    });
   </script>
 </body>
 </html>

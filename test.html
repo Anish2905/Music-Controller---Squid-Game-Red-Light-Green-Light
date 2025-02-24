@@ -5,7 +5,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* Toggle Switch CSS from Uiverse.io by Madflows */
     .toggle-switch {
       position: fixed;
       bottom: 1rem;
@@ -59,8 +58,6 @@
       background-color: var(--dark);
       box-shadow: none;
     }
-    
-    /* Reset and global styles */
     * {
       margin: 0;
       padding: 0;
@@ -78,7 +75,6 @@
       overflow: hidden;
       transition: background 0.25s, color 0.25s;
     }
-    /* Light Mode Styles */
     body.light-mode {
       background: #f0f0f0;
       color: #333;
@@ -94,7 +90,6 @@
     body.light-mode .status {
       color: #4CAF50;
     }
-    /* Background Pattern */
     #container {
       position: fixed;
       inset: -1em;
@@ -143,7 +138,6 @@
           0% 0%;
       }
     }
-    /* Controller Styles */
     .controller {
       background: rgba(42, 47, 61, 0.95);
       padding: 2rem;
@@ -162,7 +156,6 @@
       text-transform: uppercase;
       letter-spacing: 2px;
     }
-    /* Timer Section - prominent display */
     .timer-section {
       text-align: center;
       margin-bottom: 2rem;
@@ -173,7 +166,7 @@
     .timer-display {
       font-size: 3.5em;
       font-weight: bold;
-      color: #4CAF50; /* Default to green */
+      color: #4CAF50;
       font-family: 'Courier New', monospace;
       margin: 1rem 0;
       transition: color 0.25s;
@@ -189,21 +182,18 @@
       text-align: center;
       margin-right: 10px;
     }
-    /* Notification message for timer expiration */
     .timer-notification {
       font-size: 1.2em;
       color: #FF6B6B;
       margin-top: 0.5rem;
       min-height: 1.2em;
     }
-    /* Button grid */
     .button-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 1rem;
       margin: 2rem 0;
     }
-    /* Button style inspired by .shadow__btn */
     .shadow__btn {
       padding: 15px 25px;
       border: none;
@@ -236,7 +226,6 @@
                   0 0 50px currentColor,
                   0 0 100px currentColor;
     }
-    /* Volume Control */
     .volume-control {
       margin: 2rem 0;
       display: flex;
@@ -259,14 +248,12 @@
       border-radius: 50%;
       cursor: pointer;
     }
-    /* Status display */
     .status {
       text-align: center;
       margin-top: 1rem;
       font-size: 1.2em;
       color: #4CAF50;
     }
-    /* Responsive adjustments */
     @media (max-width: 600px) {
       .timer-display {
         font-size: 2.5em;
@@ -283,23 +270,16 @@
   </style>
 </head>
 <body>
-  <!-- Background Pattern Container -->
   <div id="container"></div>
-  
   <div class="controller">
     <h1 class="title">🎮 Red Light, Green Light Music Controller</h1>
-    
-    <!-- Prominent Timer Section -->
     <div class="timer-section">
       <div class="timer-display" id="timerDisplay">00:00</div>
       <input type="number" class="timer-input" id="timerInput" placeholder="Seconds">
       <button class="shadow__btn btn-loop" onclick="startTimer()">Start Timer</button>
       <button class="shadow__btn btn-red" onclick="cancelTimer()">Cancel</button>
-      <!-- Notification text for timer expiration -->
       <div class="timer-notification" id="timerNotification"></div>
     </div>
-    
-    <!-- Music Control Buttons -->
     <div class="button-grid">
       <button class="shadow__btn btn-loop" onclick="playTrack('A', -1)">🎶 Loop Music</button>
       <button class="shadow__btn btn-red" onclick="playTrack('B')">🔴 Red Light!</button>
@@ -308,47 +288,35 @@
       <button class="shadow__btn btn-loop" onclick="stopMusic()">⏹️ Stop</button>
       <button class="shadow__btn btn-loop" onclick="document.getElementById('timerInput').focus()">⏱️ Timer</button>
     </div>
-    
-    <!-- Volume Control -->
     <div class="volume-control">
       <span>🔊 Volume:</span>
       <input type="range" class="volume-slider" min="0" max="100" value="70" onchange="setVolume(this.value)">
       <span id="volumeDisplay">70%</span>
     </div>
-    
-    <!-- Playback Status -->
     <div class="status" id="status">No Track Playing</div>
   </div>
-  
-  <!-- Toggle Switch for Night Mode (from Uiverse.io by Madflows) -->
   <div class="toggle-switch">
     <label class="switch-label">
       <input type="checkbox" class="checkbox">
       <span class="slider"></span>
     </label>
   </div>
-  
   <script>
-    // Audio tracks setup – ensure t.mp3, r.mp3, and g.mp3 are in the same directory.
     const tracks = {
       'A': new Audio('t.mp3'),
       'B': new Audio('r.mp3'),
       'C': new Audio('g.mp3')
     };
-    // Set default volume for all tracks
     let currentVolume = 0.7;
     Object.values(tracks).forEach(audio => {
       audio.volume = currentVolume;
     });
-    
     let currentTrack = null;
     let currentTrackKey = null;
     let isPaused = false;
     let timerInterval = null;
     let trackStartTime = 0;
     let totalPlayed = { 'A': 0, 'B': 0, 'C': 0 };
-    
-    // Log played duration for a track in the console
     function logDuration(trackKey) {
       if (trackKey && trackStartTime) {
         const duration = (Date.now() - trackStartTime) / 1000;
@@ -356,8 +324,6 @@
         console.log(`Played ${trackKey} for ${duration.toFixed(2)} seconds (Total: ${totalPlayed[trackKey].toFixed(2)}s)`);
       }
     }
-    
-    // Play a given track; if loop is -1 then loop indefinitely
     function playTrack(track, loop = 0) {
       if (currentTrack) {
         logDuration(currentTrackKey);
@@ -370,8 +336,6 @@
       currentTrack.loop = (loop === -1);
       currentTrack.play();
       updateStatus();
-      // Change timer display color based on track selection:
-      // Red Light (B) → red; Green Light (C) → green; otherwise, default green.
       if (track === 'B') {
         document.getElementById('timerDisplay').style.color = "#FF6B6B";
       } else if (track === 'C') {
@@ -380,8 +344,6 @@
         document.getElementById('timerDisplay').style.color = "#4CAF50";
       }
     }
-    
-    // Stop current music
     function stopMusic() {
       if (currentTrack) {
         logDuration(currentTrackKey);
@@ -394,8 +356,6 @@
       updateStatus();
       updatePauseButton();
     }
-    
-    // Toggle pause/resume of current track
     function togglePause() {
       if (!currentTrack) return;
       if (isPaused) {
@@ -410,20 +370,14 @@
       updateStatus();
       updatePauseButton();
     }
-    
-    // When track C ends, automatically play track A on loop
     tracks['C'].addEventListener('ended', () => {
       logDuration('C');
       playTrack('A', -1);
     });
-    
-    // Update the pause button text based on state
     function updatePauseButton() {
       const btn = document.getElementById('pauseButton');
       btn.textContent = isPaused ? "▶️ Resume" : "⏸️ Pause";
     }
-    
-    // Set volume for all tracks and update display
     function setVolume(value) {
       currentVolume = value / 100;
       document.getElementById('volumeDisplay').textContent = `${value}%`;
@@ -431,8 +385,6 @@
         audio.volume = currentVolume;
       });
     }
-    
-    // Update the status display text
     function updateStatus() {
       const status = document.getElementById('status');
       if (!currentTrackKey) {
@@ -441,8 +393,6 @@
         status.textContent = `Current Track: ${currentTrackKey}${isPaused ? " (Paused)" : ""}`;
       }
     }
-    
-    // Timer functionality
     let timerCancelFlag = false;
     function startTimer() {
       const seconds = parseInt(document.getElementById('timerInput').value);
@@ -455,7 +405,6 @@
       let remaining = seconds;
       updateTimerDisplay(remaining);
       timerCancelFlag = false;
-      // Clear any previous notification message
       document.getElementById('timerNotification').textContent = "";
       timerInterval = setInterval(() => {
         if (timerCancelFlag) {
@@ -466,14 +415,12 @@
         updateTimerDisplay(remaining);
         if (remaining <= 0) {
           clearInterval(timerInterval);
-          // Display notification message on the page
           document.getElementById('timerNotification').textContent = "Timer expired! Playing Red Light!";
           stopMusic();
           playTrack('B');
         }
       }, 1000);
     }
-    
     function cancelTimer() {
       if (timerInterval) {
         clearInterval(timerInterval);
@@ -481,18 +428,14 @@
       }
       timerCancelFlag = true;
       updateTimerDisplay(0);
-      // Clear notification when timer is cancelled
       document.getElementById('timerNotification').textContent = "";
     }
-    
     function updateTimerDisplay(seconds) {
       const minutes = Math.floor(seconds / 60);
       const remSeconds = seconds % 60;
       document.getElementById('timerDisplay').textContent =
         `${minutes.toString().padStart(2, '0')}:${remSeconds.toString().padStart(2, '0')}`;
     }
-    
-    // Light/Dark Mode Toggle Functionality using new toggle switch
     document.querySelector('.checkbox').addEventListener('change', function() {
       if (this.checked) {
         document.body.classList.add('light-mode');

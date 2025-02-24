@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>🎮 Red Light, Green Light Music Controller</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* Toggle Switch CSS from Uiverse.io by Madflows */
+    .toggle-switch {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      width: 100px;
+      height: 50px;
+      --light: #d8dbe0;
+      --dark: #28292c;
+      --link: rgb(27, 129, 112);
+      --link-hover: rgb(24, 94, 82);
+      z-index: 2;
+    }
+    .switch-label {
+      position: absolute;
+      width: 100%;
+      height: 50px;
+      background-color: var(--dark);
+      border-radius: 25px;
+      cursor: pointer;
+      border: 3px solid var(--dark);
+      display: block;
+    }
+    .checkbox {
+      position: absolute;
+      display: none;
+    }
+    .slider {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 25px;
+      transition: 0.3s;
+    }
+    .checkbox:checked ~ .slider {
+      background-color: var(--light);
+    }
+    .slider::before {
+      content: "";
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      box-shadow: inset 12px -4px 0px 0px var(--light);
+      background-color: var(--dark);
+      transition: 0.3s;
+    }
+    .checkbox:checked ~ .slider::before {
+      transform: translateX(50px);
+      background-color: var(--dark);
+      box-shadow: none;
+    }
+    
+    /* Reset and global styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    body {
+      min-height: 100vh;
+      background: #1A1E24;
+      color: #FFFFFF;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.25s, color 0.25s;
+    }
+    /* Light Mode Styles */
+    body.light-mode {
+      background: #f0f0f0;
+      color: #333;
+    }
+    body.light-mode .controller {
+      background: rgba(255,255,255,0.95);
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
+    }
+    body.light-mode .title {
+      color: #FF6B6B;
+    }
+    body.light-mode .timer-display,
+    body.light-mode .status {
+      color: #4CAF50;
+    }
+    /* Background Pattern */
+    #container {
+      position: fixed;
+      inset: -1em;
+      --c: 7px;
+      background-color: #000;
+      background-image: radial-gradient(circle at 50% 50%, #0000 1.5px, #000 0 var(--c), #0000 var(--c)),
+        radial-gradient(circle at 50% 50%, #0000 1.5px, #000 0 var(--c), #0000 var(--c)),
+        radial-gradient(circle at 50% 50%, #f00, #f000 60%),
+        radial-gradient(circle at 50% 50%, #ff0, #ff00 60%),
+        radial-gradient(circle at 50% 50%, #0f0, #0f00 60%),
+        radial-gradient(ellipse at 50% 50%, #00f, #00f0 60%);
+      background-size: 12px 20.7846097px,
+        12px 20.7846097px,
+        200% 200%,
+        200% 200%,
+        200% 200%,
+        200% 20.7846097px;
+      --p: 0px 0px, 6px 10.39230485px;
+      background-position: var(--p),
+        0% 0%,
+        0% 0%,
+        0% 0px;
+      animation: wee 40s linear infinite,
+        filt 6s linear infinite;
+      opacity: 0.3;
+      z-index: 0;
+      transition: background 0.25s;
+    }
+    @keyframes filt {
+      0% { filter: hue-rotate(0deg); }
+      to { filter: hue-rotate(360deg); }
+    }
+    @keyframes wee {
+      0% {
+        background-position: var(--p),
+          800% 400%,
+          1000% -400%,
+          -1200% -600%,
+          400% 41.5692194px;
+      }
+      to {
+        background-position: var(--p),
+          0% 0%,
+          0% 0%,
+          0% 0%,
+          0% 0%;
+      }
+    }
+    /* Controller Styles */
+    .controller {
+      background: rgba(42, 47, 61, 0.95);
+      padding: 2rem;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 800px;
+      z-index: 1;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+    .title {
+      color: #FF6B6B;
+      text-align: center;
+      font-size: 2em;
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    /* Timer Section - prominent display */
+    .timer-section {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+    }
+    .timer-display {
+      font-size: 3.5em;
+      font-weight: bold;
+      color: #4CAF50; /* Default to green */
+      font-family: 'Courier New', monospace;
+      margin: 1rem 0;
+      transition: color 0.25s;
+    }
+    .timer-input {
+      background: #3D4455;
+      border: none;
+      padding: 0.8rem;
+      border-radius: 5px;
+      color: white;
+      font-size: 1.2em;
+      width: 150px;
+      text-align: center;
+      margin-right: 10px;
+    }
+    /* Notification message for timer expiration */
+    .timer-notification {
+      font-size: 1.2em;
+      color: #FF6B6B;
+      margin-top: 0.5rem;
+      min-height: 1.2em;
+    }
+    /* Button grid */
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    /* Button style inspired by .shadow__btn */
+    .shadow__btn {
+      padding: 15px 25px;
+      border: none;
+      font-size: 17px;
+      color: #fff;
+      border-radius: 7px;
+      letter-spacing: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+      transition: 0.5s;
+      transition-property: box-shadow;
+      cursor: pointer;
+      margin: 5px;
+    }
+    .btn-loop {
+      background: rgb(0,140,255);
+      box-shadow: 0 0 25px rgb(0,140,255);
+    }
+    .btn-red {
+      background: #FF6B6B;
+      box-shadow: 0 0 25px #FF6B6B;
+    }
+    .btn-green {
+      background: #4CAF50;
+      box-shadow: 0 0 25px #4CAF50;
+    }
+    .shadow__btn:hover {
+      box-shadow: 0 0 5px currentColor,
+                  0 0 25px currentColor,
+                  0 0 50px currentColor,
+                  0 0 100px currentColor;
+    }
+    /* Volume Control */
+    .volume-control {
+      margin: 2rem 0;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .volume-slider {
+      flex: 1;
+      height: 10px;
+      appearance: none;
+      -webkit-appearance: none;
+      background: #3D4455;
+      border-radius: 5px;
+    }
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #FF6B6B;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    /* Status display */
+    .status {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 1.2em;
+      color: #4CAF50;
+    }
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      .timer-display {
+        font-size: 2.5em;
+      }
+      .timer-input {
+        width: 100px;
+        font-size: 1em;
+      }
+      .shadow__btn {
+        font-size: 15px;
+        padding: 12px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Pattern Container -->
+  <div id="container"></div>
+  
+  <div class="controller">
+    <h1 class="title">🎮 Red Light, Green Light Music Controller</h1>
+    
+    <!-- Prominent Timer Section -->
+    <div class="timer-section">
+      <div class="timer-display" id="timerDisplay">00:00</div>
+      <input type="number" class="timer-input" id="timerInput" placeholder="Seconds">
+      <button class="shadow__btn btn-loop" onclick="startTimer()">Start Timer</button>
+      <button class="shadow__btn btn-red" onclick="cancelTimer()">Cancel</button>
+      <!-- Notification text for timer expiration -->
+      <div class="timer-notification" id="timerNotification"></div>
+    </div>
+    
+    <!-- Music Control Buttons -->
+    <div class="button-grid">
+      <button class="shadow__btn btn-loop" onclick="playTrack('A', -1)">🎶 Loop Music</button>
+      <button class="shadow__btn btn-red" onclick="playTrack('B')">🔴 Red Light!</button>
+      <button class="shadow__btn btn-green" onclick="playTrack('C')">🟢 Green Light</button>
+      <button class="shadow__btn btn-loop" onclick="togglePause()" id="pauseButton">⏸️ Pause</button>
+      <button class="shadow__btn btn-loop" onclick="stopMusic()">⏹️ Stop</button>
+      <button class="shadow__btn btn-loop" onclick="document.getElementById('timerInput').focus()">⏱️ Timer</button>
+    </div>
+    
+    <!-- Volume Control -->
+    <div class="volume-control">
+      <span>🔊 Volume:</span>
+      <input type="range" class="volume-slider" min="0" max="100" value="70" onchange="setVolume(this.value)">
+      <span id="volumeDisplay">70%</span>
+    </div>
+    
+    <!-- Playback Status -->
+    <div class="status" id="status">No Track Playing</div>
+  </div>
+  
+  <!-- Toggle Switch for Night Mode (from Uiverse.io by Madflows) -->
+  <div class="toggle-switch">
+    <label class="switch-label">
+      <input type="checkbox" class="checkbox">
+      <span class="slider"></span>
+    </label>
+  </div>
+  
+  <script>
+    // Audio tracks setup – ensure t.mp3, r.mp3, and g.mp3 are in the same directory.
+    const tracks = {
+      'A': new Audio('t.mp3'),
+      'B': new Audio('r.mp3'),
+      'C': new Audio('g.mp3')
+    };
+    // Set default volume for all tracks
+    let currentVolume = 0.7;
+    Object.values(tracks).forEach(audio => {
+      audio.volume = currentVolume;
+    });
+    
+    let currentTrack = null;
+    let currentTrackKey = null;
+    let isPaused = false;
+    let timerInterval = null;
+    let trackStartTime = 0;
+    let totalPlayed = { 'A': 0, 'B': 0, 'C': 0 };
+    
+    // Log played duration for a track in the console
+    function logDuration(trackKey) {
+      if (trackKey && trackStartTime) {
+        const duration = (Date.now() - trackStartTime) / 1000;
+        totalPlayed[trackKey] += duration;
+        console.log(`Played ${trackKey} for ${duration.toFixed(2)} seconds (Total: ${totalPlayed[trackKey].toFixed(2)}s)`);
+      }
+    }
+    
+    // Play a given track; if loop is -1 then loop indefinitely
+    function playTrack(track, loop = 0) {
+      if (currentTrack) {
+        logDuration(currentTrackKey);
+        currentTrack.pause();
+        currentTrack.currentTime = 0;
+      }
+      currentTrackKey = track;
+      currentTrack = tracks[track];
+      trackStartTime = Date.now();
+      currentTrack.loop = (loop === -1);
+      currentTrack.play();
+      updateStatus();
+      // Change timer display color based on track selection:
+      // Red Light (B) → red; Green Light (C) → green; otherwise, default green.
+      if (track === 'B') {
+        document.getElementById('timerDisplay').style.color = "#FF6B6B";
+      } else if (track === 'C') {
+        document.getElementById('timerDisplay').style.color = "#4CAF50";
+      } else {
+        document.getElementById('timerDisplay').style.color = "#4CAF50";
+      }
+    }
+    
+    // Stop current music
+    function stopMusic() {
+      if (currentTrack) {
+        logDuration(currentTrackKey);
+        currentTrack.pause();
+        currentTrack.currentTime = 0;
+      }
+      currentTrack = null;
+      currentTrackKey = null;
+      isPaused = false;
+      updateStatus();
+      updatePauseButton();
+    }
+    
+    // Toggle pause/resume of current track
+    function togglePause() {
+      if (!currentTrack) return;
+      if (isPaused) {
+        currentTrack.play();
+        trackStartTime = Date.now();
+        isPaused = false;
+      } else {
+        logDuration(currentTrackKey);
+        currentTrack.pause();
+        isPaused = true;
+      }
+      updateStatus();
+      updatePauseButton();
+    }
+    
+    // When track C ends, automatically play track A on loop
+    tracks['C'].addEventListener('ended', () => {
+      logDuration('C');
+      playTrack('A', -1);
+    });
+    
+    // Update the pause button text based on state
+    function updatePauseButton() {
+      const btn = document.getElementById('pauseButton');
+      btn.textContent = isPaused ? "▶️ Resume" : "⏸️ Pause";
+    }
+    
+    // Set volume for all tracks and update display
+    function setVolume(value) {
+      currentVolume = value / 100;
+      document.getElementById('volumeDisplay').textContent = `${value}%`;
+      Object.values(tracks).forEach(audio => {
+        audio.volume = currentVolume;
+      });
+    }
+    
+    // Update the status display text
+    function updateStatus() {
+      const status = document.getElementById('status');
+      if (!currentTrackKey) {
+        status.textContent = "No Track Playing";
+      } else {
+        status.textContent = `Current Track: ${currentTrackKey}${isPaused ? " (Paused)" : ""}`;
+      }
+    }
+    
+    // Timer functionality
+    let timerCancelFlag = false;
+    function startTimer() {
+      const seconds = parseInt(document.getElementById('timerInput').value);
+      if (isNaN(seconds) || seconds <= 0) {
+        alert("Please enter a valid time in seconds");
+        return;
+      }
+      cancelTimer();
+      playTrack('A', -1);
+      let remaining = seconds;
+      updateTimerDisplay(remaining);
+      timerCancelFlag = false;
+      // Clear any previous notification message
+      document.getElementById('timerNotification').textContent = "";
+      timerInterval = setInterval(() => {
+        if (timerCancelFlag) {
+          clearInterval(timerInterval);
+          return;
+        }
+        remaining--;
+        updateTimerDisplay(remaining);
+        if (remaining <= 0) {
+          clearInterval(timerInterval);
+          // Display notification message on the page
+          document.getElementById('timerNotification').textContent = "Timer expired! Playing Red Light!";
+          stopMusic();
+          playTrack('B');
+        }
+      }, 1000);
+    }
+    
+    function cancelTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      timerCancelFlag = true;
+      updateTimerDisplay(0);
+      // Clear notification when timer is cancelled
+      document.getElementById('timerNotification').textContent = "";
+    }
+    
+    function updateTimerDisplay(seconds) {
+      const minutes = Math.floor(seconds / 60);
+      const remSeconds = seconds % 60;
+      document.getElementById('timerDisplay').textContent =
+        `${minutes.toString().padStart(2, '0')}:${remSeconds.toString().padStart(2, '0')}`;
+    }
+    
+    // Light/Dark Mode Toggle Functionality using new toggle switch
+    document.querySelector('.checkbox').addEventListener('change', function() {
+      if (this.checked) {
+        document.body.classList.add('light-mode');
+      } else {
+        document.body.classList.remove('light-mode');
+      }
+    });
+  </script>
+</body>
+</html>

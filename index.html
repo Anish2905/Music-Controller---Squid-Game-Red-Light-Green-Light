@@ -254,7 +254,12 @@
       font-size: 1.2em;
       color: #4CAF50;
     }
+    /* Mobile-specific adjustments */
     @media (max-width: 600px) {
+      .controller {
+        margin: 1rem;
+        padding: 1.5rem;
+      }
       .timer-display {
         font-size: 2.5em;
       }
@@ -265,6 +270,32 @@
       .shadow__btn {
         font-size: 15px;
         padding: 12px 20px;
+      }
+    }
+    /* Adjust grid layout for smaller screens */
+    @media (max-width: 500px) {
+      .button-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    /* Adjust toggle switch dimensions on very small screens */
+    @media (max-width: 400px) {
+      .toggle-switch {
+        width: 80px;
+        height: 40px;
+      }
+      .switch-label {
+        height: 40px;
+        border-radius: 20px;
+      }
+      .slider::before {
+        width: 20px;
+        height: 20px;
+        top: 10px;
+        left: 10px;
+      }
+      .checkbox:checked ~ .slider::before {
+        transform: translateX(40px);
       }
     }
   </style>
@@ -281,12 +312,13 @@
       <div class="timer-notification" id="timerNotification"></div>
     </div>
     <div class="button-grid">
-      <button class="shadow__btn btn-loop" onclick="playTrack('A', -1)">🎶 Loop Music</button>
+      <!-- Reordered buttons: Red Light, Green Light, Loop Music, Pause, Stop, and Logs -->
       <button class="shadow__btn btn-red" onclick="playTrack('B')">🔴 Red Light!</button>
       <button class="shadow__btn btn-green" onclick="playTrack('C')">🟢 Green Light</button>
+      <button class="shadow__btn btn-loop" onclick="playTrack('A', -1)">🎶 Loop Music</button>
       <button class="shadow__btn btn-loop" onclick="togglePause()" id="pauseButton">⏸️ Pause</button>
       <button class="shadow__btn btn-loop" onclick="stopMusic()">⏹️ Stop</button>
-      <button class="shadow__btn btn-loop" onclick="document.getElementById('timerInput').focus()">⏱️ Timer</button>
+      <button class="shadow__btn btn-loop" onclick="viewLogs()">📜 View Logs</button>
     </div>
     <div class="volume-control">
       <span>🔊 Volume:</span>
@@ -302,6 +334,7 @@
     </label>
   </div>
   <script>
+    // Audio tracks
     const tracks = {
       'A': new Audio('t.mp3'),
       'B': new Audio('r.mp3'),
@@ -317,11 +350,16 @@
     let timerInterval = null;
     let trackStartTime = 0;
     let totalPlayed = { 'A': 0, 'B': 0, 'C': 0 };
+    // Array to store logs for viewing
+    let logs = [];
+
     function logDuration(trackKey) {
       if (trackKey && trackStartTime) {
         const duration = (Date.now() - trackStartTime) / 1000;
         totalPlayed[trackKey] += duration;
-        console.log(`Played ${trackKey} for ${duration.toFixed(2)} seconds (Total: ${totalPlayed[trackKey].toFixed(2)}s)`);
+        const logMessage = `Played ${trackKey} for ${duration.toFixed(2)} seconds (Total: ${totalPlayed[trackKey].toFixed(2)}s)`;
+        logs.push(logMessage);
+        console.log(logMessage);
       }
     }
     function playTrack(track, loop = 0) {
@@ -435,6 +473,13 @@
       const remSeconds = seconds % 60;
       document.getElementById('timerDisplay').textContent =
         `${minutes.toString().padStart(2, '0')}:${remSeconds.toString().padStart(2, '0')}`;
+    }
+    function viewLogs() {
+      if (logs.length === 0) {
+        alert("No logs available.");
+      } else {
+        alert(logs.join("\n"));
+      }
     }
     document.querySelector('.checkbox').addEventListener('change', function() {
       if (this.checked) {

@@ -45,6 +45,9 @@
         font-size: 15px;
         padding: 12px 20px;
       }
+      .volume-control input[type="range"] {
+        width: 120px;
+      }
     }
     #container {
       position: fixed;
@@ -144,6 +147,30 @@
       margin-top: 0.5rem;
       min-height: 1.2em;
     }
+    .volume-control {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .volume-control label {
+      font-size: 1.2em;
+      margin-right: 0.5rem;
+    }
+    .volume-control input[type="range"] {
+      width: 150px;
+      -webkit-appearance: none;
+      background: #3D4455;
+      height: 5px;
+      border-radius: 5px;
+      outline: none;
+    }
+    .volume-control input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      background: #FF6B6B;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
     .button-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -193,6 +220,14 @@
       font-size: 1.2em;
       color: #4CAF50;
     }
+    /* Red Stopwatch Styling */
+    #redStopwatch {
+      font-size: 2em;
+      font-weight: bold;
+      color: #FF6B6B;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -205,15 +240,25 @@
       <button class="shadow__btn btn-loop" onclick="startTimer()">Start Timer</button>
       <button class="shadow__btn btn-red" onclick="cancelTimer()">Cancel</button>
       <div class="timer-notification" id="timerNotification"></div>
+      <!-- Volume Slider -->
+      <div class="volume-control">
+        <label for="volumeSlider">Volume:</label>
+        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1">
+      </div>
     </div>
     <div class="button-grid">
       <!-- Button order: Red Light, Green Light, Loop Music, Pause, Stop, Logs -->
       <button class="shadow__btn btn-red" onclick="playTrack('B')">🔴 Red Light!</button>
       <button class="shadow__btn btn-green" onclick="playTrack('C')">🟢 Green Light</button>
-      <button class="shadow__btn btn-loop" onclick="playTrack('A', -1)">🎶 Loop Music</button>
+      <!-- Loop Music button now plays "Pink Soldiers.mp3" -->
+      <button class="shadow__btn btn-loop" onclick="playTrack('PS', -1)">🎶 Loop Music</button>
       <button class="shadow__btn btn-loop" onclick="togglePause()" id="pauseButton">⏸️ Pause</button>
       <button class="shadow__btn btn-loop" onclick="stopMusic()">⏹️ Stop</button>
       <button class="shadow__btn btn-loop" onclick="viewLogs()">📜 View Logs</button>
+    </div>
+    <!-- Only the Red Light stopwatch is displayed now -->
+    <div class="stopwatch-section">
+      <div id="redStopwatch">Red Light Duration: 00:00</div>
     </div>
     <div class="status" id="status">No Track Playing</div>
   </div>
@@ -224,20 +269,39 @@
       'B': new Audio('r.mp3'),
       'C': new Audio('g.mp3')
     };
+    // Add the new track for loop music ("Pink Soldiers.mp3")
+    tracks['PS'] = new Audio('Pink Soldiers.mp3');
+
     let currentVolume = 1; // maximum volume
     Object.values(tracks).forEach(audio => {
       audio.volume = currentVolume;
     });
+    
+    // Announcement audios mapped by remaining seconds (30s announcer removed)
+    const announcementAudio = {
+      240: new Audio('4m.mp3'),
+      180: new Audio('3m.mp3'),
+      120: new Audio('2m.mp3'),
+      60: new Audio('1m.mp3'),
+      10: new Audio('10-1.mp3')
+    };
     
     let currentTrack = null;
     let currentTrackKey = null;
     let isPaused = false;
     let timerInterval = null;
     let trackStartTime = 0;
-    let totalPlayed = { 'A': 0, 'B': 0, 'C': 0 };
+    let totalPlayed = { 'A': 0, 'B': 0, 'C': 0, 'PS': 0 };
     // Log array for tracking play durations
     let logs = [];
     
+    // Variables for announcement handling
+    let isAnnouncementPlaying = false;
+    let announcementsTriggered = new Set();
+    // Flag to indicate that the timer has expired
+    let timerExpired = false;
+    
+    // Log play duration (used in normal track switches and stop)
     function logDuration(trackKey) {
       if (trackKey && trackStartTime) {
         const duration = (Date.now() - trackStartTime) / 1000;
@@ -247,8 +311,48 @@
         console.log(logMessage);
       }
     }
+    
+    // A special pause function for announcement interruptions (without resetting currentTime)
+    function pauseForAnnouncement() {
+      if (currentTrack && trackStartTime) {
+        const duration = (Date.now() - trackStartTime) / 1000;
+        totalPlayed[currentTrackKey] += duration;
+        return currentTrack.currentTime;
+      }
+      return 0;
+    }
+    
+    // Plays an announcement audio based on the remaining time threshold.
+    // Pauses the currently playing track and resumes it after the announcement (if the timer hasn't expired).
+    function playAnnouncement(threshold) {
+      if (isAnnouncementPlaying) return;
+      isAnnouncementPlaying = true;
+      let resumeTrack = null;
+      if (currentTrack && !isPaused) {
+        const resumeTime = pauseForAnnouncement();
+        resumeTrack = { track: currentTrack, key: currentTrackKey, time: resumeTime };
+        currentTrack.pause();
+      }
+      const announcement = announcementAudio[threshold];
+      announcement.currentTime = 0;
+      announcement.play();
+      announcement.addEventListener('ended', function onAnnouncementEnded() {
+        announcement.removeEventListener('ended', onAnnouncementEnded);
+        isAnnouncementPlaying = false;
+        // Only resume the track if the timer hasn't expired
+        if (resumeTrack && !timerExpired) {
+          currentTrack = resumeTrack.track;
+          currentTrackKey = resumeTrack.key;
+          currentTrack.currentTime = resumeTrack.time;
+          trackStartTime = Date.now();
+          currentTrack.play();
+        }
+      });
+    }
+    
+    // Play a track, optionally looping (-1 indicates infinite loop)
     function playTrack(track, loop = 0) {
-      if (currentTrack) {
+      if (currentTrack && !isAnnouncementPlaying) {
         logDuration(currentTrackKey);
         currentTrack.pause();
         currentTrack.currentTime = 0;
@@ -259,6 +363,7 @@
       currentTrack.loop = (loop === -1);
       currentTrack.play();
       updateStatus();
+      // Change timer display color based on the track (red for 'B', green for 'C')
       if (track === 'B') {
         document.getElementById('timerDisplay').style.color = "#FF6B6B";
       } else if (track === 'C') {
@@ -267,6 +372,7 @@
         document.getElementById('timerDisplay').style.color = "#4CAF50";
       }
     }
+    
     function stopMusic() {
       if (currentTrack) {
         logDuration(currentTrackKey);
@@ -279,6 +385,7 @@
       updateStatus();
       updatePauseButton();
     }
+    
     function togglePause() {
       if (!currentTrack) return;
       if (isPaused) {
@@ -293,14 +400,18 @@
       updateStatus();
       updatePauseButton();
     }
+    
+    // Event listener for track 'C'
     tracks['C'].addEventListener('ended', () => {
       logDuration('C');
       playTrack('A', -1);
     });
+    
     function updatePauseButton() {
       const btn = document.getElementById('pauseButton');
       btn.textContent = isPaused ? "▶️ Resume" : "⏸️ Pause";
     }
+    
     function updateStatus() {
       const status = document.getElementById('status');
       if (!currentTrackKey) {
@@ -309,6 +420,8 @@
         status.textContent = `Current Track: ${currentTrackKey}${isPaused ? " (Paused)" : ""}`;
       }
     }
+    
+    // Main timer functionality with announcement triggers
     let timerCancelFlag = false;
     function startTimer() {
       const seconds = parseInt(document.getElementById('timerInput').value);
@@ -316,7 +429,15 @@
         alert("Please enter a valid time in seconds");
         return;
       }
+      // Cancel any previous timer and stop any playing music (including loop music)
       cancelTimer();
+      // Reset red light duration when starting a new timer
+      totalPlayed['B'] = 0;
+      document.getElementById('redStopwatch').textContent = "Red Light Duration: 00:00";
+      
+      announcementsTriggered = new Set();
+      timerExpired = false;
+      // Start background music (track 'A') which stops any loop music already playing
       playTrack('A', -1);
       let remaining = seconds;
       updateTimerDisplay(remaining);
@@ -329,14 +450,23 @@
         }
         remaining--;
         updateTimerDisplay(remaining);
+        
+        // Check for announcement thresholds: 4m (240s), 3m (180s), 2m (120s), 1m (60s), 10s (30s announcer removed)
+        if ([240,180,120,60,10].includes(remaining) && !announcementsTriggered.has(remaining)) {
+          announcementsTriggered.add(remaining);
+          playAnnouncement(remaining);
+        }
+        
         if (remaining <= 0) {
           clearInterval(timerInterval);
+          timerExpired = true;
           document.getElementById('timerNotification').textContent = "Timer expired! Playing Red Light!";
           stopMusic();
           playTrack('B');
         }
       }, 1000);
     }
+    
     function cancelTimer() {
       if (timerInterval) {
         clearInterval(timerInterval);
@@ -345,14 +475,16 @@
       timerCancelFlag = true;
       updateTimerDisplay(0);
       document.getElementById('timerNotification').textContent = "";
-      stopMusic(); // Now stops the track when Cancel is pressed.
+      stopMusic();
     }
+    
     function updateTimerDisplay(seconds) {
       const minutes = Math.floor(seconds / 60);
       const remSeconds = seconds % 60;
       document.getElementById('timerDisplay').textContent =
         `${minutes.toString().padStart(2, '0')}:${remSeconds.toString().padStart(2, '0')}`;
     }
+    
     function viewLogs() {
       if (logs.length === 0) {
         alert("No logs available.");
@@ -360,6 +492,33 @@
         alert(logs.join("\n"));
       }
     }
+    
+    // Utility function to format seconds as MM:SS
+    function formatTime(seconds) {
+      seconds = Math.floor(seconds);
+      const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const s = (seconds % 60).toString().padStart(2, '0');
+      return m + ":" + s;
+    }
+    
+    // Update only the Red Light stopwatch every second
+    function updateStopwatches() {
+      let redTime = totalPlayed['B'];
+      if (currentTrackKey === 'B' && !isPaused && !isAnnouncementPlaying) {
+        redTime += (Date.now() - trackStartTime) / 1000;
+      }
+      document.getElementById('redStopwatch').textContent = "Red Light Duration: " + formatTime(redTime);
+    }
+    
+    setInterval(updateStopwatches, 1000);
+    
+    // Volume slider event listener to update all tracks
+    document.getElementById('volumeSlider').addEventListener('input', function() {
+      currentVolume = parseFloat(this.value);
+      Object.values(tracks).forEach(audio => {
+        audio.volume = currentVolume;
+      });
+    });
   </script>
 </body>
 </html>
